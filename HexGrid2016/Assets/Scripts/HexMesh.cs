@@ -35,7 +35,7 @@ public class HexMesh {
 			}
 		}
 
-		Triangulate();
+		MakeTriangles();
 	}
 
 	void AddTriangle (Vector3 v1, Vector3 v2, Vector3 v3) {
@@ -48,27 +48,26 @@ public class HexMesh {
 		triangles.Add(vertexIndex + 2);
 	}
 
-	public void Triangulate () {
+	public void MakeTriangles () {
 		mesh.Clear();
 		vertices.Clear();
 		triangles.Clear();
 		for(int x=0; x<map.SizeX; x++){
 			for(int z=0; z<map.SizeZ; z++){
-				Triangulate(cells[x,z]);
+				Vector3 center = cells[x,z].Center;
+
+				for(int i=0; i<6; i++){
+					AddTriangle(
+						center,
+						center + HexMetrics.corners[i],
+						center + HexMetrics.corners[i + 1]
+						);
+				}
 			}
 		}
 		mesh.vertices = vertices.ToArray();
 		mesh.triangles = triangles.ToArray();
 		mesh.RecalculateNormals();
-	}
-
-	void Triangulate (HexCell cell) {
-		Vector3 center = cell.Center;
-		AddTriangle(
-			center,
-			center + HexMetrics.corners[0],
-			center + HexMetrics.corners[1]
-			);
 	}
 
 	public void Clear(){
