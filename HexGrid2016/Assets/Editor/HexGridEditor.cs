@@ -2,13 +2,13 @@
 using System.Collections;
 using UnityEditor;
 
-[CustomEditor(typeof(HexGridManager))]
-public class HexGridManagerEditor : Editor {
+[CustomEditor(typeof(HexGrid))]
+public class HexGridEditor : Editor {
 
 	public override void OnInspectorGUI(){
 		DrawDefaultInspector();
 
-		HexGridManager script = (HexGridManager)target;
+		HexGrid script = (HexGrid)target;
 		if(GUILayout.Button ("Generate!")){
 			script.Generate();
 		}

@@ -3,39 +3,40 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class HexMesh {
 
-	TileMap map;
 	HexCell[,] cells;
 
 	MeshFilter meshFilter;
 	MeshRenderer meshRenderer;
+	MeshCollider meshCollider;
+
 
 	Mesh mesh;
 	List<Vector3> vertices;
 	List<int> triangles;
+	List<Color> colors;
 
-	public HexMesh(TileMap tmap, MeshFilter mfilter, MeshRenderer mrenderer){
-		map = tmap;
+	public HexMesh(HexCell[,] cellsArray, MeshFilter mfilter, MeshRenderer mrenderer, MeshCollider mcollider){
+
+		cells = cellsArray;
+
 		meshFilter = mfilter;
 		meshRenderer = mrenderer;
+		meshCollider = mcollider;
 		meshFilter.mesh = mesh = new Mesh();
-
-		cells = new HexCell[map.SizeX, map.SizeZ];
 
 		mesh.name = "Hex Mesh";
 		vertices = new List<Vector3>();
 		triangles = new List<int>();
+		colors = new List<Color>();
 
-		for(int x=0; x<map.SizeX; x++){
-			for(int z=0; z<map.SizeZ; z++){
-				Tile tile = map.Tiles[x,z];
-				cells[x,z] = new HexCell(tile.X, tile.Y, tile.Z);
-			}
-		}
+		MakeTriangles(cells);
 
-		MakeTriangles();
+		meshCollider.sharedMesh = mesh;
+
+		
 	}
 
 	void AddTriangle (Vector3 v1, Vector3 v2, Vector3 v3) {
@@ -48,33 +49,58 @@ public class HexMesh {
 		triangles.Add(vertexIndex + 2);
 	}
 
-	public void MakeTriangles () {
+	public void MakeTriangles (HexCell[,] cells) {
 		mesh.Clear();
 		vertices.Clear();
 		triangles.Clear();
-		for(int x=0; x<map.SizeX; x++){
-			for(int z=0; z<map.SizeZ; z++){
-				Vector3 center = cells[x,z].Center;
+		colors.Clear();
 
-				for(int i=0; i<6; i++){
-					AddTriangle(
-						center,
-						center + HexMetrics.corners[i],
-						center + HexMetrics.corners[i + 1]
-						);
+		/*
+		foreach(HexCell cell in cells){
+			MakeTriangles(cell);
+		}*/
+
+		for (int i=0; i<cells.GetLength(0); i++){
+			for (int j=0; j<cells.GetLength(1); j++){
+				if (cells[i,j] != null){
+					MakeTriangles(cells[i,j]);
 				}
 			}
 		}
+
 		mesh.vertices = vertices.ToArray();
 		mesh.triangles = triangles.ToArray();
+		mesh.colors = colors.ToArray();
+
 		mesh.RecalculateNormals();
+
+
+	}
+
+	void MakeTriangles (HexCell cell){
+		Vector3 center = cell.Center;
+		for(int i=0; i<6; i++){
+			AddTriangle(
+				center,
+				center + HexMetrics.corners[i],
+				center + HexMetrics.corners[i + 1]
+				);
+			AddTriangleColor(cell.color);
+		}
+	}
+
+	void AddTriangleColor (Color color) {
+		colors.Add(color);
+		colors.Add(color);
+		colors.Add(color);
 	}
 
 	public void Clear(){
 		Array.Clear(cells, 0, cells.Length);
-		vertices.Clear();
-		triangles.Clear();
-		mesh.Clear();
+		//DEJA DANS MAKETRIANGLES()
+		//vertices.Clear();
+		//triangles.Clear();
+		//mesh.Clear();
 	}
 }
 
